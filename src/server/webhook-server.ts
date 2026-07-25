@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { app } from "../auth/github-auth.js";
 import type { JobQueue } from "../queue/job-queue.js";
+import { registry } from "../utils/metrics.js";
 
 let jobQueue: JobQueue | undefined;
 
@@ -10,13 +11,6 @@ export function setJobQueue(queue: JobQueue | undefined) {
 
 /**
  * Registers webhook-related routes on the Fastify instance.
- *
- * Phase 6 behavior:
- * - Verify signature
- * - Enqueue event for async processing
- * - Respond immediately within the 10s webhook budget
- *
- * If no queue is configured, falls back to inline `verifyAndReceive`.
  */
 export function registerWebhookRoutes(server: FastifyInstance) {
   server.post("/webhooks", async (request, reply) => {
@@ -55,4 +49,9 @@ export function registerWebhookRoutes(server: FastifyInstance) {
   });
 
   server.get("/health", async () => ({ status: "ok" }));
+
+  server.get("/metrics", async (_request, reply) => {
+    reply.header("Content-Type", registry.contentType);
+    reply.send(await registry.metrics());
+  });
 }
