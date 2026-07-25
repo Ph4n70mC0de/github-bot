@@ -1,4 +1,5 @@
 import { App } from "@octokit/app";
+import { Octokit } from "@octokit/rest";
 
 /**
  * Singleton GitHub App instance.
@@ -7,6 +8,9 @@ import { App } from "@octokit/app";
  * - JWT generation from the private key
  * - Installation token caching (1-hour TTL, auto-refresh)
  * - Webhook verification via the underlying Webhooks instance
+ *
+ * We pass `@octokit/rest` as the Octokit constructor so returned
+ * installation clients expose the `.rest` plugin used by handlers.
  */
 export const app = new App({
   appId: process.env.GITHUB_APP_ID!,
@@ -14,6 +18,7 @@ export const app = new App({
   webhooks: {
     secret: process.env.GITHUB_WEBHOOK_SECRET!,
   },
+  Octokit: Octokit as any,
 });
 
 /**
