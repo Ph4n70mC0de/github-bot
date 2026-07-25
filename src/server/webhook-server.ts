@@ -1,26 +1,55 @@
 import type { FastifyInstance } from "fastify";
 import { app } from "../auth/github-auth.js";
+import type { JobQueue } from "../queue/job-queue.js";
+
+let jobQueue: JobQueue | undefined;
+
+export function setJobQueue(queue: JobQueue | undefined) {
+  jobQueue = queue;
+}
 
 /**
  * Registers webhook-related routes on the Fastify instance.
  *
- * Phase 1 deliverable:
- * - POST /webhooks  -> HMAC-SHA256 signature verification + event dispatch
- * - GET  /health     -> liveness probe
+ * Phase 6 behavior:
+ * - Verify signature
+ * - Enqueue event for async processing
+ * - Respond immediately within the 10s webhook budget
+ *
+ * If no queue is configured, falls back to inline `verifyAndReceive`.
  */
 export function registerWebhookRoutes(server: FastifyInstance) {
   server.post("/webhooks", async (request, reply) => {
     try {
-      await app.webhooks.verifyAndReceive({
+      const payloadString = JSON.stringify(request.body);
+      const signature = request.headers["x-hub-signature-256"] as string;
+
+      const valid = await app.webhooks.verify(payloadString, signature);
+      if (!valid) {
+        reply.code(400).send({ error: "Invalid webhook" });
+        return;
+      }
+
+      if (!jobQueue) {
+        await app.webhooks.receive({
+          id: request.headers["x-github-delivery"] as string,
+          name: request.headers["x-github-event"] as string,
+          payload: request.body,
+        } as any);
+
+        reply.send({ ok: true });
+        return;
+      }
+
+      await jobQueue.add("github-event", {
         id: request.headers["x-github-delivery"] as string,
         name: request.headers["x-github-event"] as string,
-        signature: request.headers["x-hub-signature-256"] as string,
-        payload: JSON.stringify(request.body),
+        payload: request.body,
       });
 
-      reply.send({ ok: true });
+      reply.send({ queued: true });
     } catch (error) {
-      request.log.error(error, "Invalid webhook");
+      request.log.error(error, "Webhook processing failed");
       reply.code(400).send({ error: "Invalid webhook" });
     }
   });
