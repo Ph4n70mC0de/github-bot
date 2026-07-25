@@ -48,7 +48,7 @@ async function isAutoMergeCandidate(
     return { eligible: false, reason: "missing-pull-request" };
   }
 
-  // 1. Explicit opt-in label required (Plan §9.4)
+  // 1. Explicit opt-in label required (Plan.md section 9.4)
   const hasAutoMergeLabel = (pr.labels ?? []).some(
     (l: { name: string }) => l.name === "auto-merge",
   );
@@ -66,7 +66,7 @@ async function isAutoMergeCandidate(
     return { eligible: false, reason: "draft-pr" };
   }
 
-  // 4. Mergeable can be `null` while GitHub computes it (Plan §14)
+  // 4. Mergeable can be `null` while GitHub computes it (Plan.md section 14)
   if (pr.mergeable === null) {
     await waitForMergeable();
     // After waiting, we do a single re-fetch to avoid blindly merging
