@@ -11,8 +11,8 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  lint-and-typecheck:
-    name: Lint + TypeScript
+  typecheck-and-test:
+    name: TypeScript + Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -37,7 +37,7 @@ jobs:
 
   build-and-push:
     name: Build + Push Docker Image
-    needs: lint-and-typecheck
+    needs: typecheck-and-test
     runs-on: ubuntu-latest
     if: github.event_name == "push" && github.ref == "refs/heads/main"
     permissions:
