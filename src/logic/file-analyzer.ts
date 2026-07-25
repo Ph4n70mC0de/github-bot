@@ -24,6 +24,8 @@ const MAX_ADDITIONS_PER_FILE = 1000;
 const MAX_DELETIONS_PER_FILE = 1000;
 const MAX_CHANGES_PER_FILE = 1500;
 
+const GENERATED_PATH_SEGMENTS = new Set(["dist", "build", "coverage", "generated"]);
+
 function hasBinaryExtension(filename: string): boolean {
   const ext = filename.split(".").pop()?.toLowerCase() ?? "";
   return [
@@ -75,12 +77,16 @@ function isLargeFile(file: FileAnalysisInput): FileIssue | null {
 
 function isGeneratedFile(filename: string): boolean {
   const lower = filename.toLowerCase();
-  if (lower.includes(".generated.")) return true;
-  if (lower.includes("/generated/")) return true;
-  if (lower.endsWith(".d.ts") && !lower.endsWith(".test-d.ts")) return true;
-  if (lower.includes("/dist/")) return true;
-  if (lower.includes("/build/")) return true;
-  if (lower.includes("/coverage/")) return true;
+  const segments = lower.split(/[\\/]/);
+  if (segments.some((segment) => GENERATED_PATH_SEGMENTS.has(segment))) {
+    return true;
+  }
+  if (lower.endsWith(".d.ts") && !lower.endsWith(".test-d.ts")) {
+    return true;
+  }
+  if (lower.includes(".generated.")) {
+    return true;
+  }
   return false;
 }
 
