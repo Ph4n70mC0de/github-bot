@@ -7,7 +7,25 @@ import { createJobQueue, createEventWorker } from "../queue/job-queue.js";
 
 dotenv.config();
 
+function initSentry() {
+  const sentryDsn = process.env.SENTRY_DSN;
+  if (!sentryDsn) return;
+
+  try {
+    const Sentry = require("@sentry/node");
+    Sentry.init({
+      dsn: sentryDsn,
+      tracesSampleRate: 1.0,
+    });
+    console.log("Sentry initialized");
+  } catch (error) {
+    console.warn("Failed to initialize Sentry:", error);
+  }
+}
+
 async function main() {
+  initSentry();
+
   if (!process.env.GITHUB_APP_ID || !process.env.GITHUB_PRIVATE_KEY || !process.env.GITHUB_WEBHOOK_SECRET) {
     console.error("Missing required environment variables: GITHUB_APP_ID, GITHUB_PRIVATE_KEY, GITHUB_WEBHOOK_SECRET");
     process.exit(1);
@@ -35,6 +53,7 @@ async function main() {
   const port = Number(process.env.PORT ?? 3000);
   await server.listen({ port, host: "0.0.0.0" });
   console.log(`Server listening on http://0.0.0.0:${port}`);
+  console.log(`Health check: http://localhost:${port}/health`);
 
   const shutdown = async () => {
     if (worker) await worker.close();
