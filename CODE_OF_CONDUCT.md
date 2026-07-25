@@ -32,7 +32,7 @@ This Code of Conduct applies within all community spaces, and also applies when 
 
 ## Reporting
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project maintainers at [INSERT CONTACT EMAIL].
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project maintainers at [arjscandes73@gmail.com].
 
 ## Attribution
 
