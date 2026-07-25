@@ -1,0 +1,17 @@
+{
+  "action": "opened",
+  "issue": {
+    "number": 1,
+    "title": "Bug found",
+    "body": "Something is broken",
+    "labels": []
+  },
+  "repository": {
+    "name": "repo",
+    "full_name": "owner/repo",
+    "owner": { "login": "owner" },
+    "private": false
+  },
+  "installation": { "id": 123456 },
+  "sender": { "type": "User", "login": "octocat" }
+}
